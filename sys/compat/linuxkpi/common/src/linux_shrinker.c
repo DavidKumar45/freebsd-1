@@ -67,15 +67,15 @@ shrinker_shrink(struct shrinker *s)
 {
 	struct shrink_control sc;
 	unsigned long can_free;
-	unsigned long batch = s->batch ? s->batch : SHRINKER_BATCH;
+	unsigned long batch;
 	unsigned long freeed = 0;
 	unsigned long ret;
 
 	can_free = s->count_objects(s, &sc);
-	if (can_free <= 0) {
+	if (can_free <= 0)
 		return;
-	}
 
+	batch = s->batch ? s->batch : SHRINKER_BATCH;
 	while (freeed <= can_free) {
 		sc.nr_to_scan = batch;
 		ret = s->scan_objects(s, &sc);
@@ -104,7 +104,8 @@ linuxkpi_sysinit_shrinker(void *arg __unused)
 {
 
 	mtx_init(&mtx_shrinker, "lkpi-shrinker", NULL, MTX_DEF);
-	lowmem_tag = EVENTHANDLER_REGISTER(vm_lowmem, linuxkpi_vm_lowmem, NULL, EVENTHANDLER_PRI_FIRST);
+	lowmem_tag = EVENTHANDLER_REGISTER(vm_lowmem, linuxkpi_vm_lowmem,
+	    NULL, EVENTHANDLER_PRI_FIRST);
 }
 
 static void
