@@ -45,9 +45,9 @@ int
 linuxkpi_register_shrinker(struct shrinker *s)
 {
 
-	KASSERT(s != NULL, "NULL shrinker");
-	KASSERT(s->count_objects != NULL, "NULL shrinker");
-	KASSERT(s->scan_objects != NULL, "NULL shrinker");
+	KASSERT(s != NULL, ("NULL shrinker"));
+	KASSERT(s->count_objects != NULL, ("NULL shrinker"));
+	KASSERT(s->scan_objects != NULL, ("NULL shrinker"));
 	mtx_lock(&mtx_shrinker);
 	TAILQ_INSERT_TAIL(&lkpi_shrinkers, s, next);
 	mtx_unlock(&mtx_shrinker);
