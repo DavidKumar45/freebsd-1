@@ -70,6 +70,9 @@ __FBSDID("$FreeBSD$");
 #include "backlight_if.h"
 #include "pcib_if.h"
 
+/* Undef the linux function macro defined in linux/pci.h */
+#undef pci_get_class
+
 static device_probe_t linux_pci_probe;
 static device_attach_t linux_pci_attach;
 static device_detach_t linux_pci_detach;
