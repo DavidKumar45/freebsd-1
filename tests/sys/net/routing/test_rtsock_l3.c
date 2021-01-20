@@ -1127,7 +1127,8 @@ ATF_TC_BODY(rtm_add_v6_gu_ifa_prefixroute_success, tc)
 	/* gateway should be link sdl with ifindex of an address interface */
 	verify_link_gateway(rtm, c->ifindex);
 
-	int expected_rt_flags = RTF_UP | RTF_DONE | RTF_PINNED;
+	/* TODO: PINNED? */
+	int expected_rt_flags = RTF_UP | RTF_DONE;
 	verify_route_message_extra(rtm, c->ifindex, expected_rt_flags);
 }
 
@@ -1256,7 +1257,7 @@ ATF_TC_BODY(rtm_del_v6_gu_ifa_prefixroute_success, tc)
 	/* gateway should be link sdl with ifindex of an address interface */
 	verify_link_gateway(rtm, c->ifindex);
 
-	int expected_rt_flags = RTF_DONE | RTF_PINNED;
+	int expected_rt_flags = RTF_DONE;
 	verify_route_message_extra(rtm, c->ifindex, expected_rt_flags);
 }
 

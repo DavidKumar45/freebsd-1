@@ -64,7 +64,6 @@ __FBSDID("$FreeBSD$");
 #include <net/if.h>
 #include <net/if_var.h>
 #include <net/route.h>
-#include <net/route/route_ctl.h>
 #include <net/vnet.h>
 
 #include <netinet/in.h>
@@ -865,8 +864,7 @@ rip_ctlinput(int cmd, struct sockaddr *sa, void *vip)
 
 		err = ifa_del_loopback_route((struct ifaddr *)ia, sa);
 
-		rt_addrmsg(RTM_ADD, &ia->ia_ifa, ia->ia_ifp->if_fib);
-		err = in_handle_ifaddr_route(RTM_ADD, ia);
+		err = rtinit(&ia->ia_ifa, RTM_ADD, flags);
 		if (err == 0)
 			ia->ia_flags |= IFA_ROUTE;
 
