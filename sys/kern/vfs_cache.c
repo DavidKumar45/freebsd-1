@@ -2597,7 +2597,7 @@ cache_changesize(u_long newmaxvnodes)
 }
 
 /*
- * Invalidate all entries from and to a particular vnode.
+ * Remove all entries from and to a particular vnode.
  */
 static void
 cache_purge_impl(struct vnode *vp)
@@ -2688,7 +2688,7 @@ cache_purge_vgone(struct vnode *vp)
 }
 
 /*
- * Invalidate all negative entries for a particular directory vnode.
+ * Remove all negative entries for a particular directory vnode.
  */
 void
 cache_purge_negative(struct vnode *vp)
@@ -4697,7 +4697,7 @@ cache_fplookup_dotdot(struct cache_fpl *fpl)
 		 * TODO
 		 * The opposite of climb mount is needed here.
 		 */
-		return (cache_fpl_aborted(fpl));
+		return (cache_fpl_partial(fpl));
 	}
 
 	ncp = atomic_load_consume_ptr(&dvp->v_cache_dd);
@@ -4816,6 +4816,7 @@ cache_symlink_resolve(struct cache_fpl *fpl, const char *string, size_t len)
 static int __noinline
 cache_fplookup_symlink(struct cache_fpl *fpl)
 {
+	struct mount *mp;
 	struct nameidata *ndp;
 	struct componentname *cnp;
 	struct vnode *dvp, *tvp;
@@ -4830,6 +4831,20 @@ cache_fplookup_symlink(struct cache_fpl *fpl)
 		if ((cnp->cn_flags & FOLLOW) == 0) {
 			return (cache_fplookup_final(fpl));
 		}
+	}
+
+	mp = atomic_load_ptr(&dvp->v_mount);
+	if (__predict_false(mp == NULL)) {
+		return (cache_fpl_aborted(fpl));
+	}
+
+	/*
+	 * Note this check races against setting the flag just like regular
+	 * lookup.
+	 */
+	if (__predict_false((mp->mnt_flag & MNT_NOSYMFOLLOW) != 0)) {
+		cache_fpl_smr_exit(fpl);
+		return (cache_fpl_handled_error(fpl, EACCES));
 	}
 
 	error = VOP_FPLOOKUP_SYMLINK(tvp, fpl);
@@ -5328,20 +5343,11 @@ cache_fplookup_failed_vexec(struct cache_fpl *fpl, int error)
 	}
 
 	/*
-	 * Hack: they may be looking up foo/bar, where foo is a
-	 * regular file. In such a case we need to turn ENOTDIR,
-	 * but we may happen to get here with a different error.
+	 * Hack: they may be looking up foo/bar, where foo is not a directory.
+	 * In such a case we need to return ENOTDIR, but we may happen to get
+	 * here with a different error.
 	 */
 	if (dvp->v_type != VDIR) {
-		/*
-		 * The check here is predominantly to catch
-		 * EOPNOTSUPP from dead_vnodeops. If the vnode
-		 * gets doomed past this point it is going to
-		 * fail seqc verification.
-		 */
-		if (VN_IS_DOOMED(dvp)) {
-			return (cache_fpl_aborted(fpl));
-		}
 		error = ENOTDIR;
 	}
 
