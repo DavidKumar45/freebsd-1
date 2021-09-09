@@ -496,13 +496,28 @@ static struct rk_clk_pll_rate rk3328_pll_frac_rates[] = {
 	{},
 };
 
-static const char *pll_parents[] = {"xin24m"};
+/* Clock parents */
+#define PLIST(_name) static const char *_name[]
+
+/* 
+ * Both hdmi_phy and usb480m_phy should be declared as LINK clocks
+ * but we are still missing support for the devices that export those
+ * two clocks.
+ */
+
+PLIST(pll_src_p) = {"xin24m"};
+
+PLIST(pll_src_cpll_gpll_p) = {"cpll", "gpll"};
+PLIST(pll_src_cpll_gpll_hdmiphy_p) = {"cpll", "gpll" /*, hdmi_phy */};
+PLIST(pll_src_apll_gpll_dpll_npll_p) = {"apll", "gpll", "dpll", "npll"};
+PLIST(pll_src_cpll_gpll_xin24m_usb480m_p) = {"cpll", "gpll", "xin24m" /*, usb480m_phy */};
+
 static struct rk_clk_pll_def apll = {
 	.clkdef = {
 		.id = PLL_APLL,
 		.name = "apll",
-		.parent_names = pll_parents,
-		.parent_cnt = nitems(pll_parents),
+		.parent_names = pll_src_p,
+		.parent_cnt = nitems(pll_src_p),
 	},
 	.base_offset = 0x00,
 	.gate_offset = 0x200,
@@ -517,8 +532,8 @@ static struct rk_clk_pll_def dpll = {
 	.clkdef = {
 		.id = PLL_DPLL,
 		.name = "dpll",
-		.parent_names = pll_parents,
-		.parent_cnt = nitems(pll_parents),
+		.parent_names = pll_src_p,
+		.parent_cnt = nitems(pll_src_p),
 	},
 	.base_offset = 0x20,
 	.gate_offset = 0x200,
@@ -532,8 +547,8 @@ static struct rk_clk_pll_def cpll = {
 	.clkdef = {
 		.id = PLL_CPLL,
 		.name = "cpll",
-		.parent_names = pll_parents,
-		.parent_cnt = nitems(pll_parents),
+		.parent_names = pll_src_p,
+		.parent_cnt = nitems(pll_src_p),
 	},
 	.base_offset = 0x40,
 	.mode_reg = 0x80,
@@ -545,8 +560,8 @@ static struct rk_clk_pll_def gpll = {
 	.clkdef = {
 		.id = PLL_GPLL,
 		.name = "gpll",
-		.parent_names = pll_parents,
-		.parent_cnt = nitems(pll_parents),
+		.parent_names = pll_src_p,
+		.parent_cnt = nitems(pll_src_p),
 	},
 	.base_offset = 0x60,
 	.gate_offset = 0x200,
@@ -561,8 +576,8 @@ static struct rk_clk_pll_def npll = {
 	.clkdef = {
 		.id = PLL_NPLL,
 		.name = "npll",
-		.parent_names = pll_parents,
-		.parent_cnt = nitems(pll_parents),
+		.parent_names = pll_src_p,
+		.parent_cnt = nitems(pll_src_p),
 	},
 	.base_offset = 0xa0,
 	.gate_offset = 0x200,
@@ -576,14 +591,12 @@ static struct rk_clk_pll_def npll = {
 /* CRU_CLKSEL_CON0 */
 #define ACLK_BUS_PRE		136
 
-/* Needs hdmiphy as parent too*/
-static const char *aclk_bus_pre_parents[] = {"cpll", "gpll"};
 static struct rk_clk_composite_def aclk_bus_pre = {
 	.clkdef = {
 		.id = ACLK_BUS_PRE,
 		.name = "aclk_bus_pre",
-		.parent_names = aclk_bus_pre_parents,
-		.parent_cnt = nitems(aclk_bus_pre_parents),
+		.parent_names = pll_src_cpll_gpll_hdmiphy_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_hdmiphy_p),
 	},
 	.muxdiv_offset = 0x100,
 	.mux_shift = 13,
@@ -650,13 +663,12 @@ static struct rk_clk_armclk_rates rk3328_armclk_rates[] = {
 };
 
 #define	ARMCLK	6
-static const char *armclk_parents[] = {"apll", "gpll", "dpll", "npll" };
 static struct rk_clk_armclk_def armclk = {
 	.clkdef = {
 		.id = ARMCLK,
 		.name = "armclk",
-		.parent_names = armclk_parents,
-		.parent_cnt = nitems(armclk_parents),
+		.parent_names = pll_src_apll_gpll_dpll_npll_p,
+		.parent_cnt = nitems(pll_src_apll_gpll_dpll_npll_p),
 	},
 	.muxdiv_offset = 0x100,
 	.mux_shift = 6,
@@ -736,13 +748,12 @@ static struct rk_clk_composite_def clk_tsadc = {
 
 #define ACLK_PERI_PRE		137
 
-static const char *aclk_peri_pre_parents[] = {"cpll", "gpll"/* , "hdmiphy" */};
 static struct rk_clk_composite_def aclk_peri_pre = {
 	.clkdef = {
 		.id = ACLK_PERI_PRE,
 		.name = "aclk_peri_pre",
-		.parent_names = aclk_peri_pre_parents,
-		.parent_cnt = nitems(aclk_peri_pre_parents),
+		.parent_names = pll_src_cpll_gpll_hdmiphy_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_hdmiphy_p),
 	},
 	.muxdiv_offset = 0x170,
 
@@ -801,13 +812,12 @@ static struct rk_clk_composite_def hclk_peri = {
 
 #define SCLK_SDMMC		33
 
-static const char *mmc_parents[] = {"cpll", "gpll", "xin24m"/* , "usb480m" */};
 static struct rk_clk_composite_def sdmmc = {
 	.clkdef = {
 		.id = SCLK_SDMMC,
 		.name = "clk_sdmmc",
-		.parent_names = mmc_parents,
-		.parent_cnt = nitems(mmc_parents),
+		.parent_names = pll_src_cpll_gpll_xin24m_usb480m_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_xin24m_usb480m_p),
 	},
 	.muxdiv_offset = 0x178,
 
@@ -831,8 +841,8 @@ static struct rk_clk_composite_def sdio = {
 	.clkdef = {
 		.id = SCLK_SDIO,
 		.name = "clk_sdio",
-		.parent_names = mmc_parents,
-		.parent_cnt = nitems(mmc_parents),
+		.parent_names = pll_src_cpll_gpll_xin24m_usb480m_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_xin24m_usb480m_p),
 	},
 	.muxdiv_offset = 0x17C,
 
@@ -856,8 +866,8 @@ static struct rk_clk_composite_def emmc = {
 	.clkdef = {
 		.id = SCLK_EMMC,
 		.name = "clk_emmc",
-		.parent_names = mmc_parents,
-		.parent_cnt = nitems(mmc_parents),
+		.parent_names = pll_src_cpll_gpll_xin24m_usb480m_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_xin24m_usb480m_p),
 	},
 	.muxdiv_offset = 0x180,
 
@@ -878,14 +888,12 @@ static struct rk_clk_composite_def emmc = {
 #define	SCLK_I2C0	55
 #define	SCLK_I2C1	56
 
-static const char *i2c_parents[] = {"cpll", "gpll"};
-
 static struct rk_clk_composite_def i2c0 = {
 	.clkdef = {
 		.id = SCLK_I2C0,
 		.name = "clk_i2c0",
-		.parent_names = i2c_parents,
-		.parent_cnt = nitems(i2c_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	.muxdiv_offset = 0x188,
 
@@ -906,8 +914,8 @@ static struct rk_clk_composite_def i2c1 = {
 	.clkdef = {
 		.id = SCLK_I2C1,
 		.name = "clk_i2c1",
-		.parent_names = i2c_parents,
-		.parent_cnt = nitems(i2c_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	.muxdiv_offset = 0x188,
 
@@ -932,8 +940,8 @@ static struct rk_clk_composite_def i2c2 = {
 	.clkdef = {
 		.id = SCLK_I2C2,
 		.name = "clk_i2c2",
-		.parent_names = i2c_parents,
-		.parent_cnt = nitems(i2c_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	.muxdiv_offset = 0x18C,
 
@@ -954,8 +962,8 @@ static struct rk_clk_composite_def i2c3 = {
 	.clkdef = {
 		.id = SCLK_I2C3,
 		.name = "clk_i2c3",
-		.parent_names = i2c_parents,
-		.parent_cnt = nitems(i2c_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	.muxdiv_offset = 0x18C,
 
@@ -1020,14 +1028,12 @@ static struct rk_clk_composite_def usb3otg_suspend = {
 	.flags = RK_CLK_COMPOSITE_HAVE_GATE,
 };
 
-static const char *ref_usb3otg_src_parents[] = { "cpll", "gpll" };
-
 static struct rk_clk_composite_def ref_usb3otg_src = {
 	.clkdef = {
 		.id = SCLK_REF_USB3OTG_SRC,
 		.name = "clk_ref_usb3otg_src",
-		.parent_names = ref_usb3otg_src_parents,
-		.parent_cnt = nitems(ref_usb3otg_src_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	.muxdiv_offset = 0x1B4,
 
@@ -1045,13 +1051,12 @@ static struct rk_clk_composite_def ref_usb3otg_src = {
 };
 
 /* I2S0 */
-static const char *i2s0_div_parents[] = { "cpll", "gpll" };
 static struct rk_clk_composite_def i2s0_div = {
 	.clkdef = {
 		.id = 0,
 		.name = "clk_i2s0_div",
-		.parent_names = i2s0_div_parents,
-		.parent_cnt = nitems(i2s0_div_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON6 */
 	.muxdiv_offset = 0x118,
@@ -1104,13 +1109,12 @@ static struct rk_clk_mux_def i2s0_mux = {
 };
 
 /* I2S1 */
-static const char *i2s1_div_parents[] = { "cpll", "gpll" };
 static struct rk_clk_composite_def i2s1_div = {
 	.clkdef = {
 		.id = 0,
 		.name = "clk_i2s1_div",
-		.parent_names = i2s1_div_parents,
-		.parent_cnt = nitems(i2s1_div_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON8 */
 	.muxdiv_offset = 0x120,
@@ -1173,13 +1177,12 @@ static struct clk_fixed_def clkin_i2s1 = {
 };
 
 /* I2S2 */
-static const char *i2s2_div_parents[] = { "cpll", "gpll" };
 static struct rk_clk_composite_def i2s2_div = {
 	.clkdef = {
 		.id = 0,
 		.name = "clk_i2s2_div",
-		.parent_names = i2s2_div_parents,
-		.parent_cnt = nitems(i2s2_div_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON10 */
 	.muxdiv_offset = 0x128,
@@ -1253,14 +1256,12 @@ static struct clk_fixed_def xin12m = {
 	.freq = 12000000,
 };
 
-static const char *mac2io_src_parents[] = { "cpll", "gpll" };
-
 static struct rk_clk_composite_def mac2io_src = {
 	.clkdef = {
 		.id = SCLK_MAC2IO_SRC,
 		.name = "clk_mac2io_src",
-		.parent_names = mac2io_src_parents,
-		.parent_cnt = nitems(mac2io_src_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON27 */
 	.muxdiv_offset = 0x16c,
@@ -1278,14 +1279,12 @@ static struct rk_clk_composite_def mac2io_src = {
 	.flags = RK_CLK_COMPOSITE_HAVE_GATE | RK_CLK_COMPOSITE_HAVE_MUX,
 };
 
-static const char *mac2io_out_parents[] = { "cpll", "gpll" };
-
 static struct rk_clk_composite_def mac2io_out = {
 	.clkdef = {
 		.id = SCLK_MAC2IO_OUT,
 		.name = "clk_mac2io_out",
-		.parent_names = mac2io_out_parents,
-		.parent_cnt = nitems(mac2io_out_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON27 */
 	.muxdiv_offset = 0x16c,
@@ -1337,14 +1336,12 @@ static struct rk_clk_composite_def mac2io_ext = {
 	.flags = RK_CLK_COMPOSITE_HAVE_MUX | RK_CLK_COMPOSITE_GRF
 };
 
-static const char *mac2phy_src_parents[] = { "cpll", "gpll" };
-
 static struct rk_clk_composite_def mac2phy_src = {
 	.clkdef = {
 		.id = SCLK_MAC2PHY_SRC,
 		.name = "clk_mac2phy_src",
-		.parent_names = mac2phy_src_parents,
-		.parent_cnt = nitems(mac2phy_src_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON26 */
 	.muxdiv_offset = 0x168,
@@ -1410,14 +1407,12 @@ static struct clk_link_def gmac_clkin = {
 	.clkdef.name = "gmac_clkin",
 };
 
-static const char *aclk_gmac_parents[] = { "cpll", "gpll" };
-
 static struct rk_clk_composite_def aclk_gmac = {
 	.clkdef = {
 		.id = ACLK_GMAC,
 		.name = "aclk_gmac",
-		.parent_names = aclk_gmac_parents,
-		.parent_cnt = nitems(aclk_gmac_parents),
+		.parent_names = pll_src_cpll_gpll_p,
+		.parent_cnt = nitems(pll_src_cpll_gpll_p),
 	},
 	/* CRU_CLKSEL_CON35 */
 	.muxdiv_offset = 0x18c,
