@@ -39,6 +39,10 @@ device		rk_typec_phy		# Rockchip TypeC PHY
 device		dwc3			# Synopsys DWC controller
 device		rk_dwc3			# Rockchip DWC3 controller
 
+# Sound support
+device		rk3328_codec
+device		rk_i2s
+
 # MMC/SD/SDIO Card slot support
 device		sdhci
 device		dwmmc
