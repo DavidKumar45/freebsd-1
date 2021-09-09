@@ -536,6 +536,9 @@ PLIST(pll_src_cpll_gpll_hdmiphy_p) = {"cpll", "gpll" /*, hdmi_phy */};
 PLIST(pll_src_apll_gpll_dpll_npll_p) = {"apll", "gpll", "dpll", "npll"};
 PLIST(pll_src_cpll_gpll_xin24m_usb480m_p) = {"cpll", "gpll", "xin24m" /*, usb480m_phy */};
 PLIST(ref_usb3otg_p) = { "xin24m", "clk_usb3_otg0_ref" };
+PLIST(mac2io_p) = { "clk_mac2io_src", "gmac_clkin" };
+PLIST(mac2io_ext_p) = { "clk_mac2io", "gmac_clkin" };
+PLIST(mac2phy_p) = { "clk_mac2phy_src", "phy_50m_out" };
 
 static struct rk_clk_pll_def apll = {
 	.clkdef = {
@@ -882,57 +885,6 @@ static struct clk_fixed_def clkin_i2s2 = {
 	.freq = 0,
 };
 
-static const char *mac2io_parents[] = { "clk_mac2io_src", "gmac_clkin" };
-
-static struct rk_clk_composite_def mac2io = {
-	.clkdef = {
-		.id = SCLK_MAC2IO,
-		.name = "clk_mac2io",
-		.parent_names = mac2io_parents,
-		.parent_cnt = nitems(mac2io_parents),
-	},
-	.muxdiv_offset = RK3328_GRF_MAC_CON1,
-
-	.mux_shift = 10,
-	.mux_width = 1,
-
-	.flags = RK_CLK_COMPOSITE_HAVE_MUX | RK_CLK_COMPOSITE_GRF
-};
-
-static const char *mac2io_ext_parents[] = { "clk_mac2io", "gmac_clkin" };
-
-static struct rk_clk_composite_def mac2io_ext = {
-	.clkdef = {
-		.id = SCLK_MAC2IO_EXT,
-		.name = "clk_mac2io_ext",
-		.parent_names = mac2io_ext_parents,
-		.parent_cnt = nitems(mac2io_ext_parents),
-	},
-	.muxdiv_offset = RK3328_GRF_SOC_CON4,
-
-	.mux_shift = 14,
-	.mux_width = 1,
-
-	.flags = RK_CLK_COMPOSITE_HAVE_MUX | RK_CLK_COMPOSITE_GRF
-};
-
-static const char *mac2phy_parents[] = { "clk_mac2phy_src", "phy_50m_out" };
-
-static struct rk_clk_composite_def mac2phy = {
-	.clkdef = {
-		.id = SCLK_MAC2PHY,
-		.name = "clk_mac2phy",
-		.parent_names = mac2phy_parents,
-		.parent_cnt = nitems(mac2phy_parents),
-	},
-	.muxdiv_offset = RK3328_GRF_MAC_CON2,
-
-	.mux_shift = 10,
-	.mux_width = 1,
-
-	.flags = RK_CLK_COMPOSITE_HAVE_MUX | RK_CLK_COMPOSITE_GRF
-};
-
 static struct rk_clk rk3328_clks[] = {
 	/* External clocks */
 	LINK("xin24m"),
@@ -1021,6 +973,15 @@ static struct rk_clk rk3328_clks[] = {
 	MUX(SCLK_REF_USB3OTG, "clk_ref_usb3otg", ref_usb3otg_p, 0, 45, 8, 1),
 	COMP(0, "clk_ref_usb3otg_src_c", pll_src_cpll_gpll_p, 0, 45, 0, 7, 7, 1),
 
+	/* GRF_SOC_CON4 */
+	MUXGRF(SCLK_MAC2IO_EXT, "clk_mac2io_ext", mac2io_ext_p, 0, RK3328_GRF_SOC_CON4, 14, 1),
+
+	/* GRF_MAC_CON1 */
+	MUXGRF(SCLK_MAC2IO, "clk_mac2io", mac2io_p, 0, RK3328_GRF_MAC_CON1, 10, 1),
+
+	/* GRF_MAC_CON2 */
+	MUXGRF(SCLK_MAC2PHY, "clk_mac2phy", mac2phy_p, 0, RK3328_GRF_MAC_CON2, 10, 1),
+
 	{
 		.type = RK_CLK_COMPOSITE,
 		.clk.composite = &i2s0_div
@@ -1066,18 +1027,6 @@ static struct rk_clk rk3328_clks[] = {
 		.clk.fixed = &clkin_i2s2
 	},
 
-	{
-		.type = RK_CLK_COMPOSITE,
-		.clk.composite = &mac2io_ext
-	},
-	{
-		.type = RK_CLK_COMPOSITE,
-		.clk.composite = &mac2io
-	},
-	{
-		.type = RK_CLK_COMPOSITE,
-		.clk.composite = &mac2phy
-	},
 };
 
 static int
