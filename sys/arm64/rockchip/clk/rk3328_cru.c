@@ -76,9 +76,9 @@ __FBSDID("$FreeBSD$");
 #define	SCLK_MAC2PHY		101
 #define	SCLK_MAC2IO_EXT		102
 #define	ACLK_USB3OTG		132
-#define ACLK_GMAC		146
-#define ACLK_MAC2PHY		149
-#define ACLK_MAC2IO		150
+#define	ACLK_GMAC		146
+#define	ACLK_MAC2PHY		149
+#define	ACLK_MAC2IO		150
 #define	ACLK_PERI		153
 #define	PCLK_GPIO0		200
 #define	PCLK_GPIO1		201
@@ -89,9 +89,9 @@ __FBSDID("$FreeBSD$");
 #define	PCLK_I2C2		207
 #define	PCLK_I2C3		208
 #define	PCLK_TSADC		213
-#define PCLK_GMAC		220
-#define PCLK_MAC2PHY		222
-#define PCLK_MAC2IO		223
+#define	PCLK_GMAC		220
+#define	PCLK_MAC2PHY		222
+#define	PCLK_MAC2IO		223
 #define	PCLK_USB3PHY_OTG	224
 #define	PCLK_USB3PHY_PIPE	225
 #define	PCLK_USB3_GRF		226
