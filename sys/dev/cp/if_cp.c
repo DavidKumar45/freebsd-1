@@ -341,6 +341,7 @@ static int cp_attach (device_t dev)
 	drv_t *d;
 	int s = splimp ();
 
+	gone_in_dev(dev, 14, "Cronyx Tau");
 	b = malloc (sizeof(cp_board_t), M_DEVBUF, M_WAITOK);
 	if (!b) {
 		printf ("cp%d: couldn't allocate memory\n", unit);		
