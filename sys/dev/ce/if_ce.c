@@ -360,7 +360,8 @@ static int ce_attach (device_t dev)
 	ce_chan_t *c;
 	drv_t *d;
 	int s;
-		
+
+	gone_in_dev(dev, 14, "Cronyx Tau32");
 	b = malloc (sizeof(ce_board_t), M_DEVBUF, M_WAITOK);
 	if (!b) {
 		printf ("ce%d: couldn't allocate memory\n", unit);
